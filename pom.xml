@@ -10,15 +10,22 @@
     </parent>
     <groupId>com.acme.catchup</groupId>
     <artifactId>platform</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <name>catch-up-platform</name>
     <description>catch-up-platform</description>
     <url/>
     <licenses>
-        <license/>
+        <license>
+            <name>MIT</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
     </licenses>
     <developers>
-        <developer/>
+        <developer>
+            <name>John Doe</name>
+            <email>john.doe@gmail.com</email>
+        </developer>
     </developers>
     <scm>
         <connection/>
@@ -28,6 +35,8 @@
     </scm>
     <properties>
         <java.version>27</java.version>
+        <springdoc.version>3.1.0</springdoc.version>
+        <pluralize.version>1.0.0</pluralize.version>
     </properties>
     <dependencies>
         <dependency>
@@ -45,7 +54,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>3.1.0</version>
+            <version>${springdoc.version}</version>
         </dependency>
 
         <dependency>
@@ -63,6 +72,13 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/io.github.encryptorcode/pluralize -->
+        <dependency>
+            <groupId>io.github.encryptorcode</groupId>
+            <artifactId>pluralize</artifactId>
+            <version>${pluralize.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
