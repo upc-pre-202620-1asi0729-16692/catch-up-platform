@@ -23,16 +23,25 @@ public class FavoriteSourceQueryServiceImpl implements FavoriteSourceQueryServic
 
     @Override
     public List<FavoriteSource> handle(GetAllFavoriteSourcesByNewsApiKeyQuery query) {
-        return List.of();
+        log.debug("Querying all favorite sources for newsApiKey: {}", query.newsApiKey().maskedForLogging());
+        var results = favoriteSourceRepository.findAllByNewsApiKey(query.newsApiKey());
+        log.debug("Found {} favorite sources for newsApiKey: {}", results.size(), query.newsApiKey().maskedForLogging());
+        return results;
     }
 
     @Override
     public Optional<FavoriteSource> handle(GetFavoriteSourceByIdQuery query) {
-        return Optional.empty();
+        log.debug("Querying favorite source by id: {}", query.id());
+        var result = favoriteSourceRepository.findById(query.id());
+        if (result.isEmpty()) log.debug("No favorite source found for id: {}", query.id());
+        return result;
     }
 
     @Override
     public Optional<FavoriteSource> handle(GetFavoriteSourceByNewsApiKeyAndSourceIdQuery query) {
-        return Optional.empty();
+        log.debug("Querying favorite source by newsApiKey: {} and sourceId: {}", query.newsApiKey().maskedForLogging(), query.sourceId());
+        var result = favoriteSourceRepository.findByNewsApiKeyAndSourceId(query.newsApiKey(), query.sourceId());
+        if (result.isEmpty()) log.debug("No favorite source found for newsApiKey: {} and sourceId: {}", query.newsApiKey().maskedForLogging(), query.sourceId());
+        return result;
     }
 }
