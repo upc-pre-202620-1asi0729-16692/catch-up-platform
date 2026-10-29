@@ -36,7 +36,7 @@ described in the README before running the complete test suite.
 - Keep use-case contracts and orchestration in the application layer.
 - Keep HTTP resources, controllers, validation-to-HTTP translation, and
   response mapping in the REST interface layer.
-- Keep framework and database integration in infrastructure. Avoid exposing
+- Keep framework and database integration in the infrastructure. Avoid exposing
   persistence or transport details to the domain model.
 - Use the ubiquitous language consistently in types, methods, tests, and
   documentation.
@@ -99,8 +99,8 @@ Release versions use `MAJOR.MINOR.PATCH`:
 
 Until `1.0.0`, the public API is not considered stable; document compatibility
 implications clearly. Follow the repository's release process when preparing a
-release, and ensure the Maven project version and release notes agree with the
-chosen version. Conventional Commit types can help identify changes, but do not
+ release and ensure the Maven project version and release notes agree with the
+chosen version. Conventional Commit types can help identify changes but do not
 replace reviewing the actual compatibility impact.
 
 ## Pull requests
@@ -118,4 +118,4 @@ Before requesting review:
 
 Address review feedback with follow-up commits where practical. Squashing or
 rebasing should follow the repository's contribution workflow and must not
-rewrite history others depend on.
+rewrite the history others depend on.
