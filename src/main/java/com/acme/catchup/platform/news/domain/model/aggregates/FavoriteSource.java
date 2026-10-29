@@ -24,6 +24,7 @@ public class FavoriteSource extends AbstractAggregateRoot<FavoriteSource> {
     public static final String NEWS_API_KEY_SOURCE_ID_UNIQUE_CONSTRAINT = "uk_favorite_source_news_api_key_source_id";
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
