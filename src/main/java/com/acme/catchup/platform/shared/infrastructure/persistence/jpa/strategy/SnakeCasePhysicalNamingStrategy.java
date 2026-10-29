@@ -6,6 +6,12 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 import static io.github.encryptorcode.pluralize.Pluralize.pluralize;
 
+/**
+ * Hibernate physical naming strategy that maps entity and attribute identifiers to
+ * pluralized snake_case database table and column names.
+ *
+ * @since 1.0
+ */
 public class SnakeCasePhysicalNamingStrategy implements PhysicalNamingStrategy {
 
     private Identifier toSnakeCase(final Identifier identifier) {

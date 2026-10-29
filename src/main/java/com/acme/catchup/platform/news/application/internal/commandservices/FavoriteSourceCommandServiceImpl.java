@@ -13,16 +13,38 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static com.acme.catchup.platform.news.domain.model.aggregates.FavoriteSource.NEWS_API_KEY_SOURCE_ID_UNIQUE_CONSTRAINT;
 
+/**
+ * Implementation of the {@link FavoriteSourceCommandService} application contract.
+ * <p>
+ * Coordinates persistence checks and transactions for creating favorite sources.
+ * Validates uniqueness via an initial repository pre-check as well as handling
+ * database constraint violations as post-checks.
+ * </p>
+ *
+ * @since 1.0
+ */
 @Slf4j
 @Service
 public class FavoriteSourceCommandServiceImpl implements FavoriteSourceCommandService {
     private static final String DUPLICATE_FAVORITE_SOURCE_CONSTRAINT = NEWS_API_KEY_SOURCE_ID_UNIQUE_CONSTRAINT;
     private final FavoriteSourceRepository favoriteSourceRepository;
 
+    /**
+     * Constructs a new {@link FavoriteSourceCommandServiceImpl} with the given repository.
+     *
+     * @param favoriteSourceRepository the repository for managing favorite source persistence
+     */
     public FavoriteSourceCommandServiceImpl(FavoriteSourceRepository favoriteSourceRepository) {
         this.favoriteSourceRepository = favoriteSourceRepository;
     }
 
+    /**
+     * Handles the {@link CreateFavoriteSourceCommand} by persisting a new {@link FavoriteSource}.
+     *
+     * @param command the command containing creation parameters
+     * @return a {@link Result} with the created favorite source or a failure if a duplicate is found
+     * @throws DataIntegrityViolationException if an unexpected database integrity error occurs
+     */
     @Override
     @Transactional
     public Result<FavoriteSource, FavoriteSourceCommandFailure> handle(CreateFavoriteSourceCommand command) {

@@ -14,15 +14,33 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Global REST exception handler translating common application and validation exceptions
+ * into standardized {@link ErrorResponse} / RFC 7807 problem payloads with localized error messages.
+ *
+ * @since 1.0
+ */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private final MessageSource messageSource;
 
+    /**
+     * Constructs a new {@link GlobalExceptionHandler} with the given {@link MessageSource}.
+     *
+     * @param messageSource the message source used to resolve localized error descriptions
+     */
     public GlobalExceptionHandler(MessageSource messageSource) {
         this.messageSource = messageSource;
     }
 
+    /**
+     * Handles Jakarta Bean Validation errors (e.g. {@code @Valid} failures on request payloads).
+     *
+     * @param exception the validation exception
+     * @param locale    the current request locale
+     * @return an {@link ErrorResponse} containing the localized bad request details
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorResponse handleException(MethodArgumentNotValidException exception, Locale locale) {
@@ -37,6 +55,13 @@ public class GlobalExceptionHandler {
                 prefix + " " + fields);
     }
 
+    /**
+     * Handles {@link IllegalArgumentException} domain or input validation failures.
+     *
+     * @param exception the illegal argument exception
+     * @param locale    the current request locale
+     * @return an {@link ErrorResponse} containing the resolved localized message
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorResponse handleException(IllegalArgumentException exception, Locale locale) {

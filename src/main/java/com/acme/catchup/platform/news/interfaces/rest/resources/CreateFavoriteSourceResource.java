@@ -5,6 +5,17 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Request resource record used to create a new favorite source via the REST API.
+ * <p>
+ * Carries input validation constraints (non-blank, size, allowed character pattern)
+ * for the News API key and source identifier.
+ * </p>
+ *
+ * @param newsApiKey News API key associated with the favorite source
+ * @param sourceId   source identifier to mark as favorite
+ * @since 1.0
+ */
 @Schema(description = "Request resource used to create a favorite source.")
 public record CreateFavoriteSourceResource(
         @Schema(
