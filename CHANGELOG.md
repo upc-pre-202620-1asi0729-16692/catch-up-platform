@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-[1.0.0] 2026-10-29
+## [1.0.0] - 2026-10-29
 
 ### Added
 
@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `GlobalExceptionHandler` and localized validation/error messages in English (`messages.properties`) and Spanish (`messages_es.properties`).
 - Environment-specific Spring profiles (`dev`, `prod`) and Docker container configuration (`Dockerfile`).
 - SpringDoc OpenAPI / Swagger UI integration for interactive API documentation.
+- Comprehensive Javadoc documentation across domain models, application CQRS services, JPA persistence infrastructure, REST interfaces, and shared utilities following Domain-Driven Design principles.
 - Project documentation including Architecture Decision Records (ADRs), PlantUML class diagram, user stories, and contributing guidelines.
 
+[Unreleased]: https://github.com/upc-pre-202620-1asi0729-16692/catch-up-platform/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/upc-pre-202620-1asi0729-16692/catch-up-platform/releases/tag/v1.0.0
