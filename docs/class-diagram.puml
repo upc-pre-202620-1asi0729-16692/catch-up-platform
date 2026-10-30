@@ -1,0 +1,250 @@
+@startuml
+' CatchUp Platform Class Diagram
+
+skinparam classAttributeIconSize 0
+
+package "news" {
+  package "interfaces.rest" {
+    class FavoriteSourcesController <<rest-controller>> {
+      +createFavoriteSource(CreateFavoriteSourceResource) : ResponseEntity<?>
+      +getFavoriteSourceById(Long) : ResponseEntity<?>
+      +getFavoriteSourcesWithParameters(String, String) : ResponseEntity<?>
+    }
+
+    package "interfaces.rest.resources" {
+      class CreateFavoriteSourceResource <<request-resource>> {
+        +String newsApiKey
+        +String sourceId
+      }
+      class FavoriteSourceResource <<response-resource>> {
+        +Long id
+        +String newsApiKey
+        +String sourceId
+      }
+    }
+
+    package "interfaces.rest.transform" {
+      class CreateFavoriteSourceCommandFromResourceAssembler <<translator>> {
+        +toCommandFromResource(CreateFavoriteSourceResource) : CreateFavoriteSourceCommand
+      }
+      class NewsValueObjectFromStringAssembler <<translator>> {
+        +toNewsApiKeyFromString(String) : NewsApiKey
+        +toSourceIdFromString(String) : SourceId
+      }
+      class FavoriteSourceResourceFromEntityAssembler <<translator>> {
+        +toResourceFromEntity(FavoriteSource) : FavoriteSourceResource
+      }
+      class ResponseEntityFromFavoriteSourceCommandResultAssembler <<translator>> {
+        +toResponseEntityFromResult(Result<FavoriteSource, FavoriteSourceCommandFailure>, MessageSource) : ResponseEntity<?>
+      }
+      class ResponseEntityFromFavoriteSourceQueryResultAssembler <<translator>> {
+        +toResponseEntityFromFavoriteSource(FavoriteSource) : ResponseEntity<?>
+        +toResponseEntityFromList(List<FavoriteSource>) : ResponseEntity<?>
+        +badRequest(MessageSource, String, Object...) : ResponseEntity<ProblemDetail>
+        +notFound(MessageSource, String, Object...) : ResponseEntity<ProblemDetail>
+      }
+    }
+  }
+
+  package "application.commandservices" {
+    interface FavoriteSourceCommandService <<application-service>> {
+      +handle(CreateFavoriteSourceCommand) : Result<FavoriteSource, FavoriteSourceCommandFailure>
+    }
+    interface FavoriteSourceCommandFailure <<failure>> {
+      +messageKey() : String
+    }
+    class "FavoriteSourceCommandFailure.Duplicate" as FavoriteSourceCommandFailureDuplicate <<failure>> {
+      +messageKey() : String
+    }
+  }
+
+  package "application.queryservices" {
+    interface FavoriteSourceQueryService <<application-service>> {
+      +handle(GetAllFavoriteSourcesByNewsApiKeyQuery) : List<FavoriteSource>
+      +handle(GetFavoriteSourceByIdQuery) : Optional<FavoriteSource>
+      +handle(GetFavoriteSourceByNewsApiKeyAndSourceIdQuery) : Optional<FavoriteSource>
+    }
+  }
+
+  package "application.internal.commandservices" {
+    class FavoriteSourceCommandServiceImpl <<application-service>> {
+      +handle(CreateFavoriteSourceCommand) : Result<FavoriteSource, FavoriteSourceCommandFailure>
+      -duplicateResult() : Result<FavoriteSource, FavoriteSourceCommandFailure>
+      -isDuplicateFavoriteSourceViolation(DataIntegrityViolationException) : boolean
+    }
+  }
+
+  package "application.internal.queryservices" {
+    class FavoriteSourceQueryServiceImpl <<application-service>> {
+      +handle(GetAllFavoriteSourcesByNewsApiKeyQuery) : List<FavoriteSource>
+      +handle(GetFavoriteSourceByIdQuery) : Optional<FavoriteSource>
+      +handle(GetFavoriteSourceByNewsApiKeyAndSourceIdQuery) : Optional<FavoriteSource>
+    }
+  }
+
+  package "domain.model.aggregates" {
+    class FavoriteSource <<aggregate-root>> {
+      +NEWS_API_KEY_SOURCE_ID_UNIQUE_CONSTRAINT : String
+      -Long id
+      -NewsApiKey newsApiKey
+      -SourceId sourceId
+      -Instant createdAt
+      -Instant updatedAt
+      +FavoriteSource(CreateFavoriteSourceCommand)
+      +getId() : Long
+      +getNewsApiKey() : NewsApiKey
+      +getSourceId() : SourceId
+      +getCreatedAt() : Instant
+      +getUpdatedAt() : Instant
+    }
+  }
+
+  package "domain.model.commands" {
+    class CreateFavoriteSourceCommand <<command>> {
+      +NewsApiKey newsApiKey
+      +SourceId sourceId
+    }
+  }
+
+  package "domain.model.queries" {
+    class GetAllFavoriteSourcesByNewsApiKeyQuery <<query>> {
+      +NewsApiKey newsApiKey
+    }
+    class GetFavoriteSourceByIdQuery <<query>> {
+      +Long id
+    }
+    class GetFavoriteSourceByNewsApiKeyAndSourceIdQuery <<query>> {
+      +NewsApiKey newsApiKey
+      +SourceId sourceId
+    }
+  }
+
+  package "domain.model.valueobjects" {
+    class NewsApiKey <<value-object>> {
+      +String value
+      +maskedForLogging() : String
+    }
+    class SourceId <<value-object>> {
+      +String value
+    }
+  }
+
+  package "infrastructure.persistence.jpa" {
+    interface FavoriteSourceRepository <<spring-data-repository>> {
+      +findAllByNewsApiKey(NewsApiKey) : List<FavoriteSource>
+      +existsByNewsApiKeyAndSourceId(NewsApiKey, SourceId) : boolean
+      +findByNewsApiKeyAndSourceId(NewsApiKey, SourceId) : Optional<FavoriteSource>
+    }
+    interface "JpaRepository<FavoriteSource, Long>" as JpaRepository <<Spring Data>>
+
+    class NewsApiKeyAttributeConverter <<jpa-converter>> {
+      +convertToDatabaseColumn(NewsApiKey) : String
+      +convertToEntityAttribute(String) : NewsApiKey
+    }
+    class SourceIdAttributeConverter <<jpa-converter>> {
+      +convertToDatabaseColumn(SourceId) : String
+      +convertToEntityAttribute(String) : SourceId
+    }
+  }
+}
+
+package "shared" {
+  package "interfaces.rest" {
+    class GlobalExceptionHandler <<rest-controller-advice>> {
+      +handleException(MethodArgumentNotValidException, Locale) : ErrorResponse
+      +handleException(IllegalArgumentException, Locale) : ErrorResponse
+    }
+  }
+
+  package "application.result" {
+    interface "Result<T, E>" as Result <<sealed-result>> {
+      +success(T) : Result<T, E>
+      +failure(E) : Result<T, E>
+      +isSuccess() : boolean
+      +isFailure() : boolean
+      +success() : Optional<T>
+      +failure() : Optional<E>
+      +fold(Function<T, R>, Function<E, R>) : R
+    }
+    class "Result.Success<T, E>" as ResultSuccess <<result-variant>> {
+      +T value
+    }
+    class "Result.Failure<T, E>" as ResultFailure <<result-variant>> {
+      +E error
+    }
+  }
+
+  package "infrastructure.persistence.jpa.strategy" {
+    class SnakeCasePhysicalNamingStrategy <<hibernate-strategy>> {
+      +toPhysicalCatalogName(Identifier, JdbcEnvironment) : Identifier
+      +toPhysicalSchemaName(Identifier, JdbcEnvironment) : Identifier
+      +toPhysicalTableName(Identifier, JdbcEnvironment) : Identifier
+      +toPhysicalSequenceName(Identifier, JdbcEnvironment) : Identifier
+      +toPhysicalColumnName(Identifier, JdbcEnvironment) : Identifier
+      -toSnakeCase(Identifier) : Identifier
+      -toPlural(Identifier) : Identifier
+    }
+  }
+}
+
+' Application and interface dependencies
+FavoriteSourcesController --> FavoriteSourceCommandService : invokes
+FavoriteSourcesController --> FavoriteSourceQueryService : invokes
+FavoriteSourcesController ..> CreateFavoriteSourceResource : accepts
+FavoriteSourcesController --> CreateFavoriteSourceCommandFromResourceAssembler : uses
+FavoriteSourcesController --> NewsValueObjectFromStringAssembler : uses
+FavoriteSourcesController --> ResponseEntityFromFavoriteSourceCommandResultAssembler : uses
+FavoriteSourcesController --> ResponseEntityFromFavoriteSourceQueryResultAssembler : uses
+
+FavoriteSourceCommandServiceImpl ..|> FavoriteSourceCommandService : implements
+FavoriteSourceQueryServiceImpl ..|> FavoriteSourceQueryService : implements
+FavoriteSourceCommandFailureDuplicate ..|> FavoriteSourceCommandFailure : implements
+FavoriteSourceCommandService --> Result : returns
+FavoriteSourceCommandService --> FavoriteSourceCommandFailure : returns
+FavoriteSourceCommandServiceImpl --> FavoriteSourceRepository : uses
+FavoriteSourceQueryServiceImpl --> FavoriteSourceRepository : uses
+FavoriteSourceCommandServiceImpl --> FavoriteSource : creates
+FavoriteSourceCommandServiceImpl --> Result : returns
+FavoriteSourceCommandServiceImpl --> FavoriteSourceCommandFailure : returns
+FavoriteSourceQueryService --> FavoriteSource : returns
+FavoriteSourceQueryServiceImpl --> FavoriteSource : returns
+
+' HTTP mapping
+CreateFavoriteSourceCommandFromResourceAssembler ..> CreateFavoriteSourceResource : reads
+CreateFavoriteSourceCommandFromResourceAssembler --> CreateFavoriteSourceCommand : creates
+NewsValueObjectFromStringAssembler --> NewsApiKey : creates
+NewsValueObjectFromStringAssembler --> SourceId : creates
+ResponseEntityFromFavoriteSourceCommandResultAssembler --> Result : maps
+ResponseEntityFromFavoriteSourceCommandResultAssembler --> FavoriteSourceCommandFailure : maps
+ResponseEntityFromFavoriteSourceCommandResultAssembler --> FavoriteSourceResourceFromEntityAssembler : uses
+ResponseEntityFromFavoriteSourceQueryResultAssembler --> FavoriteSourceResourceFromEntityAssembler : uses
+FavoriteSourceResourceFromEntityAssembler ..> FavoriteSource : reads
+FavoriteSourceResourceFromEntityAssembler --> FavoriteSourceResource : creates
+
+' Domain model and persistence mapping
+FavoriteSource --> CreateFavoriteSourceCommand : constructed from
+FavoriteSource --> NewsApiKey : contains
+FavoriteSource --> SourceId : contains
+CreateFavoriteSourceCommand --> NewsApiKey : contains
+CreateFavoriteSourceCommand --> SourceId : contains
+GetAllFavoriteSourcesByNewsApiKeyQuery --> NewsApiKey : contains
+GetFavoriteSourceByNewsApiKeyAndSourceIdQuery --> NewsApiKey : contains
+GetFavoriteSourceByNewsApiKeyAndSourceIdQuery --> SourceId : contains
+FavoriteSourceRepository --> FavoriteSource : persists
+FavoriteSourceRepository --|> JpaRepository : extends
+FavoriteSourceRepository --> NewsApiKey : queries by
+FavoriteSourceRepository --> SourceId : queries by
+NewsApiKeyAttributeConverter ..> NewsApiKey : converts
+SourceIdAttributeConverter ..> SourceId : converts
+Result ..> ResultSuccess : permits
+Result ..> ResultFailure : permits
+
+note bottom
+  The REST controller delegates use cases to application services.
+  Application implementations coordinate repository access and return
+  domain aggregates or typed command failures. REST translators map
+  those outcomes to HTTP resources and ProblemDetail responses.
+  FavoriteSource enforces the unique (newsApiKey, sourceId) persistence constraint.
+end note
+
+@enduml

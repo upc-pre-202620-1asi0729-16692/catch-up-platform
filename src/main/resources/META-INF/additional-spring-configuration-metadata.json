@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "environment.name",
+      "type": "java.lang.String",
+      "description": "The name of the environment to use when loading properties. If not specified, the default environment will be used."
+  }
+] }
